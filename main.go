@@ -46,29 +46,32 @@ const (
 )
 
 var (
-	board       [BoardWidth][BoardHeight]GimulType
-	bgimg       *ebiten.Image
-	gimulImgs   [GimulTypeMax]*ebiten.Image
-	selected    bool
-	selectedX   int
-	selectedY   int
-	selectedImg *ebiten.Image
-	currentTeam TeamType = TeamGreen
-	gameover    bool
-	flag        bool
+	board          [BoardWidth][BoardHeight]GimulType
+	bgimg          *ebiten.Image
+	gimulImgs      [GimulTypeMax]*ebiten.Image
+	selected       bool
+	selectedX      int
+	selectedY      int
+	selectedImg    *ebiten.Image
+	currentTeam    TeamType = TeamGreen
+	gameover       bool
+	GreenJaToQueen bool
+	RedJaToQueen   bool
 )
 
 func GetTeamType(gimulType GimulType) TeamType {
 	if gimulType == GimulTypeGreenJa ||
 		gimulType == GimulTypeGreenJang ||
 		gimulType == GimulTypeGreenWang ||
-		gimulType == GimulTypeGreenSang {
+		gimulType == GimulTypeGreenSang ||
+		gimulType == GimulTypeGreenQueen {
 		return TeamGreen
 	}
 	if gimulType == GimulTypeRedJa ||
 		gimulType == GimulTypeRedJang ||
 		gimulType == GimulTypeRedWang ||
-		gimulType == GimulTypeRedSang {
+		gimulType == GimulTypeRedSang ||
+		gimulType == GimulTypeRedQueen {
 		return TeamRed
 	}
 	return TeamNone
@@ -99,10 +102,14 @@ func move(prevX, prevY, tarX, tarY int) {
 			currentTeam = TeamGreen
 		}
 		if tarX == 3 && board[tarX][tarY] == GimulTypeGreenJa {
-			flag = true
+			board[tarX][tarY] = GimulTypeGreenQueen
+		}
+		if tarX == 0 && board[tarX][tarY] == GimulTypeRedJa {
+			board[tarX][tarY] = GimulTypeRedQueen
 		}
 	}
 }
+
 func isMoveble(prevX, prevY, tarX, tarY int) bool {
 	if tarX < 0 || tarY < 0 {
 		return false
@@ -125,6 +132,10 @@ func isMoveble(prevX, prevY, tarX, tarY int) bool {
 		return abs(prevX-tarX)+abs(prevY-tarY) == 1
 	case GimulTypeRedWang, GimulTypeGreenWang:
 		return abs(prevX-tarX) == 1 || abs(prevY-tarY) == 1
+	case GimulTypeGreenQueen:
+		return !(prevY-1 == tarY && prevX-1 == tarX || prevY+1 == tarY && prevX-1 == tarX)
+	case GimulTypeRedQueen:
+		return !(prevY+1 == tarY && prevX+1 == tarX || prevY-1 == tarY && prevX+1 == tarX)
 	}
 	return false
 }
@@ -162,9 +173,6 @@ func update(screen *ebiten.Image) error {
 				screen.DrawImage(gimulImgs[GimulTypeGreenWang], opts)
 			case GimulTypeGreenJa:
 				screen.DrawImage(gimulImgs[GimulTypeGreenJa], opts)
-				if flag == true {
-					screen.DrawImage(gimulImgs[GimulTypeGreenQueen], opts)
-				}
 			case GimulTypeGreenSang:
 				screen.DrawImage(gimulImgs[GimulTypeGreenSang], opts)
 			case GimulTypeGreenJang:
